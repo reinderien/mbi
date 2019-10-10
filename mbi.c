@@ -7,29 +7,31 @@
 #include <string.h>
 #include <unistd.h>
 
+static const bool SHOW_RANGE = false;
+
 static const char
 	*prog,
 	symbols[] = "0123456789ACDEFGHJKMNPQRTUVWXYZ",
-    *const letters = symbols + 10,
     numbers[] = "0123456789",
+    *const letters = symbols + 10,
     *const digits[] = {
 		numbers + 1,
 		letters, symbols, numbers,
 		letters, symbols, numbers,
-		letters, letters, numbers, numbers
+		letters, letters, numbers, numbers,
 	};
 static const unsigned
 	N = sizeof(digits)/sizeof(*digits),
 	NNUMBERS = sizeof(numbers) - 1,
 	NSYMBOLS = sizeof(symbols) - 1,
 	NLETTERS = sizeof(symbols) - sizeof(numbers),
+	BUFFER_SIZE = (10000 / (N+1)) * (N+1),
     sizes[] = {
 		NNUMBERS - 1,
 		NLETTERS, NSYMBOLS, NNUMBERS,
 		NLETTERS, NSYMBOLS, NNUMBERS,
-		NLETTERS, NLETTERS, NNUMBERS, NNUMBERS
-	},
-	BUFFER_SIZE = (10000 / (N+1)) * (N+1);
+		NLETTERS, NLETTERS, NNUMBERS, NNUMBERS,
+	};
 static char *buffer, *bufp;
 
 static void usage() {
@@ -61,6 +63,8 @@ static void increment(uint8_t code[N]) {
 }
 
 /*
+// This is slow
+
 static void print_single(const uint8_t code[N]) {
 	for (int i = 0; i < N; i++)
 		putchar(digits[i][code[i]]);
@@ -74,14 +78,12 @@ static void print_buffer(const uint8_t code[N]) {
 	*bufp++ = '\n';
 }
 
-/*
 static unsigned long range() {
 	unsigned long r = 1;
 	for (int i = 0; i < N; i++)
 		r *= sizes[i];
 	return r;
 }
-*/
 
 static void bflush() {
 	unsigned long n = bufp - buffer;
@@ -103,7 +105,8 @@ int main(int argc, const char **argv) {
 		usage();
 	}
 	
-	// fprintf(stderr, "%lu codes possible\n", range());
+	if (SHOW_RANGE)
+		fprintf(stderr, "%lu codes possible\n", range());
 	
 	buffer = malloc(BUFFER_SIZE);
 	assert(buffer);
